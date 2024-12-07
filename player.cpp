@@ -1,17 +1,20 @@
 #pragma once
 
 #include "game_math.cpp"
+//#include "texture_manager.cpp"
 
+#include <memory>
 #include <raylib.h>
 #include <raymath.h>
 #include <iostream>
 
 class PlayerObject{
     public:
-        PlayerObject(Vector2 _pos, Vector2 _vel, Vector3 _accel_lerp_xyr, Vector2 _size, Vector2 _default_speed){
+        //PlayerObject(Vector2 _pos, Vector2 _vel, Vector3 _accel_lerp_xyr, Vector2 _size, Vector2 _default_speed){
+        PlayerObject(Vector2 _pos, Vector2 _vel, float _accel_lerp_constant, Vector2 _size, Vector2 _default_speed): sprite {nullptr} {
             pos = _pos;
             vel = _vel;
-            accel_lerp_xyr = _accel_lerp_xyr;
+            accel_lerp_constant = _accel_lerp_constant;
             size = _size;
             default_speed = _default_speed;
             max_speed = _default_speed;
@@ -21,9 +24,12 @@ class PlayerObject{
             id = id_counter++;
         }
 
+        /*
         ~PlayerObject(){
-            UnloadTexture(sprite);
+            std::cout << "(player " << id << ") Destructor called" << std::endl;
+            UnloadTexture(*sprite);
         }
+        */
 
         void set_key_binding(int key_up, int key_down, int key_left, int key_right){
             PLAYER_KEY_UP = key_up;
@@ -33,7 +39,8 @@ class PlayerObject{
         }
 
         void set_sprite(const char* filename){
-            sprite = LoadTexture(filename);
+            sprite = std::make_shared<Texture2D>(LoadTexture(filename));
+            //texture_manager.add(sprite);
             std::cout << "Loaded texture from '" << filename << "'" << std::endl;
         }
 
@@ -90,14 +97,14 @@ class PlayerObject{
             }
 
             // left/right movement
-            vel.x = lerp_velocity(vel.x, right_key_down, left_key_down, max_speed.x, accel_lerp_xyr.z, deltatime);
+            vel.x = lerp_velocity(vel.x, right_key_down, left_key_down, max_speed.x, accel_lerp_constant, deltatime);
             // up/down movement
-            vel.y = lerp_velocity(vel.y, down_key_down, up_key_down, max_speed.y, accel_lerp_xyr.z, deltatime);
+            vel.y = lerp_velocity(vel.y, down_key_down, up_key_down, max_speed.y, accel_lerp_constant, deltatime);
         }
 
         Vector2 pos;
         Vector2 vel;
-        Vector3 accel_lerp_xyr;
+        float accel_lerp_constant; // a constant used to 'slow down' or 'speed up' velocity lerping, expected to be ~0.005
         Vector2 size;
         Vector2 default_speed;
         Vector2 max_speed; // may change when moving diagonally, etc
@@ -110,7 +117,8 @@ class PlayerObject{
 
         int id;
 
-        Texture2D sprite;
+        //Texture2D sprite;
+        std::shared_ptr<Texture2D> sprite;
 
     private:
         inline static int id_counter = 0;

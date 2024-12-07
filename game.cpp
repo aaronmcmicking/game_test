@@ -11,8 +11,10 @@
 
 #include "print_rl_colour.cpp"
 
+#include "texture_manager.cpp"
 #include "game_math.cpp"
 #include "player.cpp"
+#include "follower.cpp"
 
 int main(){
     const int DEFAULT_WINDOW_WIDTH = 1000;
@@ -30,13 +32,20 @@ int main(){
         SetTargetFPS(TARGET_FPS);
 
         // object init
-        PlayerObject player = PlayerObject(Vector2{0,0}, Vector2{0,0}, Vector3{.1f,.1f,.0005f}, Vector2{100,100}, Vector2{350, 350});
+        PlayerObject player = PlayerObject(Vector2{0,0}, Vector2{0,0}, .0005f, Vector2{100,100}, Vector2{350, 350});
         player.set_key_binding(KEY_W, KEY_S, KEY_A, KEY_D);
         player.set_sprite("sprites/steve_face_100_100.png");
 
-        PlayerObject player2 = PlayerObject(Vector2{500,500}, Vector2{0,0}, Vector3{.1f,.1f,.0005f}, Vector2{80, 80}, Vector2{350, 350});
+        PlayerObject player2 = PlayerObject(Vector2{500,500}, Vector2{0,0}, .0005f, Vector2{80, 80}, Vector2{350, 350});
         player2.set_key_binding(KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT);
         player2.set_sprite("sprites/steve_face_100_100.png");
+
+        std::cout << "done making players, now to add them to a list" << std::endl;
+
+        std::vector<PlayerObject> players = {player, player2};
+        std::cout << "added players to a list" << std::endl;
+        Follower follower = Follower(.0003f, Vector2{100, 100}, Vector2{200, 200}, 1, players);
+        follower.set_sprite("sprites/steve_face_100_100.png");
 
         // deltatime init
         auto previous_time = std::chrono::high_resolution_clock::now();
@@ -51,13 +60,16 @@ int main(){
 
             player.update(deltatime);
             player2.update(deltatime);
+            follower.target_pos = player.pos;
+            follower.update(deltatime);
 
             // draw
             BeginDrawing();
             ClearBackground(BACKGROUND_COLOR);
 
-            DrawTexture(player.sprite, player.pos.x, player.pos.y, WHITE);
-            DrawTexture(player2.sprite, player2.pos.x, player2.pos.y, WHITE);
+            DrawTexture(*player.sprite, player.pos.x, player.pos.y, WHITE);
+            DrawTexture(*player2.sprite, player2.pos.x, player2.pos.y, WHITE);
+            DrawTexture(*follower.sprite, follower.pos.x, follower.pos.y, WHITE);
 
             DrawFPS(10, 10);
             EndDrawing();
@@ -65,7 +77,9 @@ int main(){
 
     } // close context for when window is open (destroys textures before CloseWindow called)
 
+    //texture_manager.unload();
     CloseWindow();
+
 
     return 0;
 }
