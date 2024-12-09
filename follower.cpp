@@ -6,11 +6,13 @@
 #include <algorithm>
 #include "game_math.cpp"
 #include "player.cpp"
+#include "render_object.cpp"
 //#include "texture_manager.cpp"
 
-class Follower{
+class Follower: public RenderObject{
     public:
-        Follower(float _accel_lerp_constant, Vector2 _size, Vector2 _default_speed, int _target_id, std::vector<PlayerObject>& _players, Vector2 _target_pos = {500, 500}): players {_players}, sprite {nullptr} {
+        //Follower(float _accel_lerp_constant, Vector2 _size, Vector2 _default_speed, int _target_id, std::vector<PlayerObject>& _players, Vector2 _target_pos = {500, 500}): players {_players}, sprite {nullptr} {
+        Follower(float _accel_lerp_constant, Vector2 _size, Vector2 _default_speed, int _target_id, Vector2 _target_pos = {500, 500}): sprite {nullptr} {
             target_pos = _target_pos;
             pos = {50, 50};
             vel = {0, 0};
@@ -98,6 +100,10 @@ class Follower{
             vel.y = lerp_velocity(vel.y, above_target, max_speed.y, accel_lerp_constant, deltatime);
         }
 
+        void render() override {
+            DrawTexture(*sprite, pos.x, pos.y, WHITE);
+        };
+
         Vector2 pos;
         Vector2 vel;
         float accel_lerp_constant; // a constant used to 'slow down' or 'speed up' velocity lerping, expected to be ~0.005
@@ -109,7 +115,7 @@ class Follower{
         int id;
         Vector2 target_pos = {500, 500};
         int target_id;
-        std::vector<PlayerObject>& players;
+        //std::vector<PlayerObject>& players;
 
         //Texture2D sprite;
         std::shared_ptr<Texture2D> sprite;

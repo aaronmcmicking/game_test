@@ -8,7 +8,9 @@
 #include <raymath.h>
 #include <iostream>
 
-class PlayerObject{
+#include "render_object.cpp"
+
+class PlayerObject: public RenderObject{
     public:
         //PlayerObject(Vector2 _pos, Vector2 _vel, Vector3 _accel_lerp_xyr, Vector2 _size, Vector2 _default_speed){
         PlayerObject(Vector2 _pos, Vector2 _vel, float _accel_lerp_constant, Vector2 _size, Vector2 _default_speed): sprite {nullptr} {
@@ -100,6 +102,10 @@ class PlayerObject{
             vel.x = lerp_velocity(vel.x, right_key_down, left_key_down, max_speed.x, accel_lerp_constant, deltatime);
             // up/down movement
             vel.y = lerp_velocity(vel.y, down_key_down, up_key_down, max_speed.y, accel_lerp_constant, deltatime);
+        }
+
+        void render() override {
+            DrawTexture(*sprite, pos.x, pos.y, WHITE);
         }
 
         Vector2 pos;

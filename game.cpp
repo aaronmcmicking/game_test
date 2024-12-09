@@ -13,8 +13,20 @@
 
 #include "texture_manager.cpp"
 #include "game_math.cpp"
+#include "render_object.cpp"
 #include "player.cpp"
 #include "follower.cpp"
+
+double get_deltatime(){
+    static std::chrono::high_resolution_clock::time_point previous_time = std::chrono::high_resolution_clock::now();
+
+    auto current_time = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double, std::milli> elapsed_time = current_time - previous_time;
+    previous_time = std::chrono::high_resolution_clock::now();
+    double deltatime = elapsed_time.count() / 1000.l;
+
+    return deltatime;
+}
 
 int main(){
     const int DEFAULT_WINDOW_WIDTH = 1000;
@@ -26,10 +38,10 @@ int main(){
     // window init should occur before loading assets as per RayLib requirements
     SetConfigFlags(FLAG_WINDOW_RESIZABLE);
     InitWindow(DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT, WINDOW_TITLE);
+    SetTargetFPS(TARGET_FPS);
 
     { // new context for when the window is open so that textures can be destroyed before closing the window
 
-        SetTargetFPS(TARGET_FPS);
 
         // object init
         PlayerObject player = PlayerObject(Vector2{0,0}, Vector2{0,0}, .0005f, Vector2{100,100}, Vector2{350, 350});
@@ -40,22 +52,18 @@ int main(){
         player2.set_key_binding(KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT);
         player2.set_sprite("sprites/steve_face_100_100.png");
 
-        std::cout << "done making players, now to add them to a list" << std::endl;
-
-        std::vector<PlayerObject> players = {player, player2};
-        std::cout << "added players to a list" << std::endl;
-        Follower follower = Follower(.0003f, Vector2{100, 100}, Vector2{200, 200}, 1, players);
+        Follower follower = Follower(.0003f, Vector2{100, 100}, Vector2{200, 200}, 1);
         follower.set_sprite("sprites/steve_face_100_100.png");
 
+        std::vector<RenderObject*> render_objects {};
+        render_objects.push_back(&player);
+        render_objects.push_back(&player2);
+        render_objects.push_back(&follower);
+
         // deltatime init
-        auto previous_time = std::chrono::high_resolution_clock::now();
         while(!WindowShouldClose()){
             // deltatime update
-            auto current_time = std::chrono::high_resolution_clock::now();
-            std::chrono::duration<double, std::milli> elapsed_time = current_time - previous_time;
-            previous_time = std::chrono::high_resolution_clock::now();
-
-            double deltatime = elapsed_time.count() / 1000.l;
+            double deltatime = get_deltatime();
             //std::cout << deltatime << "ms" << std::endl;
 
             player.update(deltatime);
@@ -67,9 +75,9 @@ int main(){
             BeginDrawing();
             ClearBackground(BACKGROUND_COLOR);
 
-            DrawTexture(*player.sprite, player.pos.x, player.pos.y, WHITE);
-            DrawTexture(*player2.sprite, player2.pos.x, player2.pos.y, WHITE);
-            DrawTexture(*follower.sprite, follower.pos.x, follower.pos.y, WHITE);
+            for(const auto& object: render_objects){
+                object->render();
+            }
 
             DrawFPS(10, 10);
             EndDrawing();
