@@ -4,14 +4,15 @@
 #include <raylib.h>
 #include <iostream>
 #include <algorithm>
+#include <utility>
 #include "game_math.cpp"
 #include "player.cpp"
 #include "render_object.cpp"
+
 //#include "texture_manager.cpp"
 
 class Follower: public RenderObject{
     public:
-        //Follower(float _accel_lerp_constant, Vector2 _size, Vector2 _default_speed, int _target_id, std::vector<PlayerObject>& _players, Vector2 _target_pos = {500, 500}): players {_players}, sprite {nullptr} {
         Follower(float _accel_lerp_constant, Vector2 _size, Vector2 _default_speed, int _target_id, Vector2 _target_pos = {500, 500}): sprite {nullptr} {
             target_pos = _target_pos;
             pos = {50, 50};
@@ -20,19 +21,11 @@ class Follower: public RenderObject{
             size = _size;
             default_speed = _default_speed;
             max_speed = _default_speed;
-            //render_colour = _colour;
             hitbox = Rectangle{.x = pos.x, .y = pos.y, .width = _size.x, .height = _size.y};
 
             id = id_counter++;
             target_id = _target_id;
-            //players = _players; 
         }
-
-        /*
-        ~Follower(){
-            UnloadTexture(*sprite);
-        }
-        */
 
         void set_sprite(const char* filename){
             sprite = std::make_shared<Texture2D>(LoadTexture(filename));
@@ -40,24 +33,40 @@ class Follower: public RenderObject{
             std::cout << "(Follower " << id << ") Loaded texture from '" << filename << "'" << std::endl;
         }
 
+        std::pair<bool, bool> collide(Vector2 future_pos){
+            std::pair<bool, bool> colliding {};
+            if((future_pos.x <= 0) || (future_pos.x + size.x >= GetScreenWidth())){ 
+                colliding.first = true;
+            }
+            if((future_pos.y <= 0) || (future_pos.y + size.y >= GetScreenHeight())){ 
+                colliding.second = true;
+            }
+            return colliding;
+        }
+
         void update(double deltatime){
             // check input
-            //respond_to_input(deltatime);
             update_velocity(deltatime);
 
+            Vector2 future_pos = {
+                pos.x + (vel.x * (float)deltatime), 
+                pos.y + (vel.y * (float)deltatime)
+            };
+
             // collision
-            if((pos.x <= 0) || (pos.x + size.x >= GetScreenWidth())){ 
+            std::pair<bool, bool> colliding = collide(future_pos);
+            if(colliding.first){ 
                 vel.x = 0; 
-                pos.x = std::ranges::clamp(pos.x, 1.f, GetScreenWidth()-size.x-1.f);
+                future_pos.x = std::ranges::clamp(future_pos.x, 0.f, GetScreenWidth()-size.x);
             }
-            if((pos.y <= 0) || (pos.y + size.y >= GetScreenHeight())){ 
+            if(colliding.second){ 
                 vel.y = 0; 
-                pos.y = std::ranges::clamp(pos.y, 1.f, GetScreenHeight()-size.y-1.f);
+                future_pos.y = std::ranges::clamp(future_pos.y, 0.f, GetScreenHeight()-size.y);
             }
 
             // update position
-            pos.x += vel.x * deltatime;
-            pos.y += vel.y * deltatime;
+            pos.x = future_pos.x;
+            pos.y = future_pos.y;
             hitbox.x = pos.x;
             hitbox.y = pos.y;
 

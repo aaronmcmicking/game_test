@@ -56,9 +56,9 @@ int main(){
         follower.set_sprite("sprites/steve_face_100_100.png");
 
         std::vector<RenderObject*> render_objects {};
+        render_objects.push_back(&follower);
         render_objects.push_back(&player);
         render_objects.push_back(&player2);
-        render_objects.push_back(&follower);
 
         // deltatime init
         while(!WindowShouldClose()){
@@ -68,7 +68,7 @@ int main(){
 
             player.update(deltatime);
             player2.update(deltatime);
-            follower.target_pos = player.pos;
+            follower.target_pos = Vector2Add(player.pos, {50, 50});
             follower.update(deltatime);
 
             // draw

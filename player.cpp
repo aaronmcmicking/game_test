@@ -46,23 +46,40 @@ class PlayerObject: public RenderObject{
             std::cout << "Loaded texture from '" << filename << "'" << std::endl;
         }
 
+        std::pair<bool, bool> collide(Vector2 future_pos){
+            std::pair<bool, bool> colliding {};
+            if((future_pos.x <= 0) || (future_pos.x + size.x >= GetScreenWidth())){ 
+                colliding.first = true;
+            }
+            if((future_pos.y <= 0) || (future_pos.y + size.y >= GetScreenHeight())){ 
+                colliding.second = true;
+            }
+            return colliding;
+        }
+
         void update(double deltatime){
             // check input
             respond_to_input(deltatime);
 
+            Vector2 future_pos = {
+                pos.x + (vel.x * (float)deltatime), 
+                pos.y + (vel.y * (float)deltatime)
+            };
+
             // collision
-            if((pos.x <= 0) || (pos.x + size.x >= GetScreenWidth())){ 
+            std::pair<bool, bool> colliding = collide(future_pos);
+            if(colliding.first){ 
                 vel.x = 0; 
-                pos.x = std::ranges::clamp(pos.x, 1.f, GetScreenWidth()-size.x-1.f);
+                future_pos.x = std::ranges::clamp(pos.x, 0.f, GetScreenWidth()-size.x);
             }
-            if((pos.y <= 0) || (pos.y + size.y >= GetScreenHeight())){ 
+            if(colliding.second){ 
                 vel.y = 0; 
-                pos.y = std::ranges::clamp(pos.y, 1.f, GetScreenHeight()-size.y-1.f);
+                future_pos.y = std::ranges::clamp(pos.y, 0.f, GetScreenHeight()-size.y);
             }
 
             // update position
-            pos.x += vel.x * deltatime;
-            pos.y += vel.y * deltatime;
+            pos.x = future_pos.x;
+            pos.y = future_pos.y;
             hitbox.x = pos.x;
             hitbox.y = pos.y;
 
@@ -80,13 +97,13 @@ class PlayerObject: public RenderObject{
         }
 
         void update_velocity(bool left_key_down, bool right_key_down, bool up_key_down, bool down_key_down, double deltatime){
-            auto lerp_velocity = [](float old_vel, bool pos_key, bool neg_key, float speed, float lerp_constant, double deltatime){
+            auto lerp_velocity = [this](float old_vel, bool pos_key, bool neg_key, float speed, float lerp_constant, double deltatime){
                 if(!(pos_key != neg_key)){
-                    return lerp_dt_margin(old_vel, 0, deltatime, lerp_constant);
+                    return lerp_dt_margin(old_vel, 0, deltatime, lerp_constant, VELOCITY_MARGIN);
                 }else if(pos_key){
-                    return lerp_dt_margin(old_vel, speed, deltatime, lerp_constant);
+                    return lerp_dt_margin(old_vel, speed, deltatime, lerp_constant, VELOCITY_MARGIN);
                 }else if(neg_key){
-                    return lerp_dt_margin(old_vel, -speed, deltatime, lerp_constant);
+                    return lerp_dt_margin(old_vel, -speed, deltatime, lerp_constant, VELOCITY_MARGIN);
                 }else{
                     throw std::exception();
                 }
@@ -102,6 +119,8 @@ class PlayerObject: public RenderObject{
             vel.x = lerp_velocity(vel.x, right_key_down, left_key_down, max_speed.x, accel_lerp_constant, deltatime);
             // up/down movement
             vel.y = lerp_velocity(vel.y, down_key_down, up_key_down, max_speed.y, accel_lerp_constant, deltatime);
+
+            //if(id==0) std::cout << "player (" << id << ") vel(x, y) = (" << vel.x << ", " << vel.y << ")" << std::endl;
         }
 
         void render() override {
@@ -121,6 +140,7 @@ class PlayerObject: public RenderObject{
         int PLAYER_KEY_LEFT;
         int PLAYER_KEY_RIGHT;
 
+        const float VELOCITY_MARGIN = 5.f;
         int id;
 
         //Texture2D sprite;
