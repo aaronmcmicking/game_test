@@ -13,18 +13,15 @@
 
 class Follower: public RenderObject{
     public:
-        //Follower(float _accel_lerp_constant, Vector2 _size, Vector2 _default_speed, int _target_id, Vector2 _target_pos = {500, 500}): RenderObject(false), sprite {nullptr} {
         Follower(Vector2 _pos, float _accel_lerp_constant, Vector2 _size, Vector2 _default_speed, Vector2 _target_pos = {500, 500}): RenderObject(_pos, false, Rectangle{}), sprite {nullptr} {
             target_pos = _target_pos;
-            pos = {50, 50};
+            pos = _pos;
             vel = {0, 0};
             accel_lerp_constant = _accel_lerp_constant;
             size = _size;
             default_speed = _default_speed;
             max_speed = _default_speed;
-            //hitbox = Rectangle{.x = pos.x, .y = pos.y, .width = _size.x, .height = _size.y};
-
-            //id = id_counter++;
+            hitbox = Rectangle{.x = pos.x, .y = pos.y, .width = _size.x, .height = _size.y};
         }
 
         void set_sprite(const char* filename){
@@ -33,18 +30,7 @@ class Follower: public RenderObject{
             std::cout << "(Follower " << id << ") Loaded texture from '" << filename << "'" << std::endl;
         }
 
-        std::pair<bool, bool> collide(Vector2 future_pos){
-            std::pair<bool, bool> colliding {};
-            if((future_pos.x <= 0) || (future_pos.x + size.x >= GetScreenWidth())){ 
-                colliding.first = true;
-            }
-            if((future_pos.y <= 0) || (future_pos.y + size.y >= GetScreenHeight())){ 
-                colliding.second = true;
-            }
-            return colliding;
-        }
-
-        void update(std::vector<Object*> objects, double deltatime){
+        void update(std::vector<Object*> objects, Vector2 background_size, double deltatime){
             // check input
             update_velocity(deltatime);
 
@@ -53,24 +39,30 @@ class Follower: public RenderObject{
                 pos.y + (vel.y * (float)deltatime)
             };
 
+            Vector2 previous_pos = {pos.x, pos.y};
+
             // collision
-            std::pair<bool, bool> colliding = collide(future_pos);
-            if(colliding.first){ 
-                vel.x = 0; 
-                future_pos.x = std::ranges::clamp(future_pos.x, 0.f, GetScreenWidth()-size.x);
-            }
-            if(colliding.second){ 
+            // vertical collisions
+            DirectionUDLR vert_collisions = check_collision_solids(objects, Vector2{pos.x, future_pos.y});
+            if(vert_collisions.up || vert_collisions.down){
                 vel.y = 0; 
-                future_pos.y = std::ranges::clamp(future_pos.y, 0.f, GetScreenHeight()-size.y);
+                future_pos.y = pos.y;
+            }
+            // horizontal collisions
+            DirectionUDLR hori_collisions = check_collision_solids(objects, Vector2{future_pos.x, previous_pos.y});
+            if(hori_collisions.left || hori_collisions.right){
+                vel.x = 0; 
+                future_pos.x = pos.x;
             }
 
             // update position
             pos.x = future_pos.x;
             pos.y = future_pos.y;
-
             if(hitbox.has_value()){
                 hitbox->x = pos.x;
                 hitbox->y = pos.y;
+            }else{
+                std::cout << "follower (" << id << ") has no hitbox" << std::endl;
             }
 
             //printf("player %d: speed = %g\n", id, sqrtf(vel.x*vel.x + vel.y*vel.y));
@@ -79,8 +71,6 @@ class Follower: public RenderObject{
         void update_velocity(double deltatime){
 
             //std::cout << "(follower " << id << ") target has pos (x, y) = (" << target->pos.x << ", " << target->pos.y << ")" << std::endl;
-            //bool above_target = (pos.y <= target->pos.y);
-            //bool left_of_target = (pos.x <= target->pos.x);
             bool above_target = (pos.y <= target_pos.y);
             bool left_of_target = (pos.x <= target_pos.x);
 
@@ -104,21 +94,14 @@ class Follower: public RenderObject{
             DrawTexture(*sprite, pos.x + pos_offset.x, pos.y + pos_offset.y, WHITE);
         };
 
-        //Vector2 pos;
         Vector2 vel;
         float accel_lerp_constant; // a constant used to 'slow down' or 'speed up' velocity lerping, expected to be ~0.005
         Vector2 size;
         Vector2 default_speed;
         Vector2 max_speed; // may change when moving diagonally, etc
-        //Rectangle hitbox;
 
         int id;
         Vector2 target_pos;
-        //std::vector<PlayerObject>& players;
 
-        //Texture2D sprite;
         std::shared_ptr<Texture2D> sprite;
-
-    //private:
-        //inline static int id_counter = 0;
 };

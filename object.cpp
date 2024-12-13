@@ -7,15 +7,6 @@
 #include <vector>
 #include "game_math.cpp"
 
-/*
-enum DirectionUDLR{
-    UP = 1,
-    DOWN,
-    LEFT,
-    RIGHT
-};
-*/
-
 class Object{
     public:
         Object(Vector2 _pos, bool _solid = false, Rectangle _hitbox = {}){
@@ -31,7 +22,6 @@ class Object{
             id = id_counter++;
         }
 
-        //std::array<DirectionUDLR, 4> check_collision(std::vector<Object*> objects, Vector2 future_pos){
         DirectionUDLR check_collision_solids(std::vector<Object*> objects, Vector2 future_pos){
             //if(!solid){ return {false, false, false, false}; }
             if(!hitbox.has_value()){ return {false, false, false, false}; }
@@ -70,6 +60,27 @@ class Object{
                     } // colliding with current object
                 } // current object is solid
             } // for object in object
+        
+            if((collisions.left != collisions.right) && (collisions.up && collisions.down)){
+                collisions.up = false;
+                collisions.down = false;
+            }
+            if((collisions.up != collisions.down) && (collisions.left && collisions.right)){
+                collisions.left = false;
+                collisions.right = false;
+            }
+
+            /*
+            if(id==0 && (collisions.up || collisions.down || collisions.left || collisions.right)){
+                std::cout << "object (" << id << ") colliding";
+                if(collisions.up){ std::cout << " UP"; }
+                if(collisions.down){ std::cout << " DOWN"; }
+                if(collisions.left){ std::cout << " LEFT"; }
+                if(collisions.right){ std::cout << " RIGHT"; }
+                std::cout << std::endl;
+            }
+            */
+
             return collisions;
         }
 

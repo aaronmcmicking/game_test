@@ -5,6 +5,7 @@
 
 #include <memory>
 #include <vector>
+#include <limits>
 #include <raylib.h>
 #include <raymath.h>
 #include <iostream>
@@ -20,10 +21,7 @@ class PlayerObject: public RenderObject{
             size = _size;
             default_speed = _default_speed;
             max_speed = _default_speed;
-            //render_colour = _colour;
             hitbox = Rectangle{.x = _pos.x, .y = _pos.y, .width = _size.x, .height = _size.y};
-
-            //id = id_counter++;
         }
 
         /*
@@ -46,18 +44,6 @@ class PlayerObject: public RenderObject{
             std::cout << "Loaded texture from '" << filename << "'" << std::endl;
         }
 
-        std::pair<bool, bool> collide(std::vector<Object*> objects, Vector2 future_pos){
-            std::pair<bool, bool> colliding {};
-            //for(Object
-            if((future_pos.x <= 0) || (future_pos.x + size.x >= GetScreenWidth())){ 
-                colliding.first = true;
-            }
-            if((future_pos.y <= 0) || (future_pos.y + size.y >= GetScreenHeight())){ 
-                colliding.second = true;
-            }
-            return colliding;
-        }
-
         void update(std::vector<Object*> objects, Vector2 background_size, double deltatime){
             // check input
             respond_to_input(deltatime);
@@ -67,27 +53,21 @@ class PlayerObject: public RenderObject{
                 pos.y + (vel.y * (float)deltatime)
             };
 
+            Vector2 previous_pos = {pos.x, pos.y};
+
             // collision
-            DirectionUDLR collisions = check_collision_solids(objects, future_pos);
-            if(collisions.up || collisions.down){
+            // vertical collisions
+            DirectionUDLR vert_collisions = check_collision_solids(objects, Vector2{pos.x, future_pos.y});
+            if(vert_collisions.up || vert_collisions.down){
                 vel.y = 0; 
-                future_pos.y = std::ranges::clamp(pos.y, 0.f, background_size.y-size.y);
+                future_pos.y = pos.y;
             }
-            if(collisions.left || collisions.right){
+            // horizontal collisions
+            DirectionUDLR hori_collisions = check_collision_solids(objects, Vector2{future_pos.x, previous_pos.y});
+            if(hori_collisions.left || hori_collisions.right){
                 vel.x = 0; 
-                future_pos.x = std::ranges::clamp(pos.x, 0.f, background_size.x-size.x);
+                future_pos.x = pos.x;
             }
-            /*
-            std::pair<bool, bool> colliding = collide(objects, future_pos);
-            if(colliding.first){ 
-                vel.x = 0; 
-                future_pos.x = std::ranges::clamp(pos.x, 0.f, GetScreenWidth()-size.x);
-            }
-            if(colliding.second){ 
-                vel.y = 0; 
-                future_pos.y = std::ranges::clamp(pos.y, 0.f, GetScreenHeight()-size.y);
-            }
-            */
 
             // update position
             pos.x = future_pos.x;
@@ -96,8 +76,6 @@ class PlayerObject: public RenderObject{
                 hitbox->x = pos.x;
                 hitbox->y = pos.y;
             }
-
-            //printf("player %d: speed = %g\n", id, sqrtf(vel.x*vel.x + vel.y*vel.y));
         }
 
         void respond_to_input(double deltatime){
@@ -141,13 +119,11 @@ class PlayerObject: public RenderObject{
             DrawTexture(*sprite, pos.x + pos_offset.x, pos.y + pos_offset.y, WHITE);
         }
 
-        //Vector2 pos;
         Vector2 vel;
         float accel_lerp_constant; // a constant used to 'slow down' or 'speed up' velocity lerping, expected to be ~0.005
         Vector2 size;
         Vector2 default_speed;
         Vector2 max_speed; // may change when moving diagonally, etc
-        //Rectangle hitbox;
 
         int PLAYER_KEY_UP;
         int PLAYER_KEY_DOWN;
@@ -155,11 +131,6 @@ class PlayerObject: public RenderObject{
         int PLAYER_KEY_RIGHT;
 
         const float VELOCITY_MARGIN = 5.f;
-        //int id;
 
-        //Texture2D sprite;
         std::shared_ptr<Texture2D> sprite;
-
-    //private:
-    //    inline static int id_counter = 0;
 };

@@ -37,6 +37,8 @@ int main(){
     const Color BACKGROUND_COLOR = Color{30, 30, 30, 255};
     const int TARGET_FPS = 60;
 
+    const double MAX_DELTATIME = (1.f / TARGET_FPS) * 1.2f; // 20% over the expected dt
+
     // window init should occur before loading assets as per RayLib requirements
     SetConfigFlags(FLAG_WINDOW_RESIZABLE);
     InitWindow(DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT, WINDOW_TITLE);
@@ -49,7 +51,7 @@ int main(){
         UnloadImage(simple_background_img);
 
         // object init
-        PlayerObject player = PlayerObject(Vector2{50,50}, Vector2{0,0}, .0005f, Vector2{100,100}, Vector2{350, 350});
+        PlayerObject player = PlayerObject(Vector2{250, 250}, Vector2{0,0}, .0005f, Vector2{100,100}, Vector2{350, 350});
         player.set_key_binding(KEY_W, KEY_S, KEY_A, KEY_D);
         player.set_sprite("sprites/steve_face_100_100.png");
 
@@ -65,9 +67,12 @@ int main(){
         StaticObject background_bounds_left {Vector2{-100, 0}, true, (Rectangle){-100, 0, 100, (float)simple_background.height}};
         StaticObject background_bounds_right {Vector2{(float)simple_background.width, 0}, true, (Rectangle){(float)simple_background.width, 0, 100, (float)simple_background.height}};
 
+        StaticObject fence {Vector2{0,1300}, true, Rectangle{0, 1300, 2657, 200}};
+
         printf("backgrounds bounds have object IDs: top=%d, bottom=%d, left=%d, right=%d\n", background_bounds_top.id, background_bounds_bottom.id, background_bounds_left.id, background_bounds_right.id);
 
         std::vector<Object*> objects {};
+        objects.push_back(&fence);
         objects.push_back(&background_bounds_top);
         objects.push_back(&background_bounds_bottom);
         objects.push_back(&background_bounds_left);
@@ -94,13 +99,19 @@ int main(){
         while(!WindowShouldClose()){
             // deltatime update
             double deltatime = get_deltatime();
-            //std::cout << deltatime << "ms" << std::endl;
+            //std::cout << deltatime*1000.f << "ms" << std::endl; 
+            if(deltatime > MAX_DELTATIME){
+                std::cout << "skipping frame with long deltatime (" << deltatime*1000.f << "ms)" << std::endl; 
+                continue;
+            }
 
-            player.update(objects, {(float)simple_background.width, (float)simple_background.height}, deltatime);
-            player2.update(objects,{(float)simple_background.width, (float)simple_background.height}, deltatime);
+            Vector2 background_size = {(float)simple_background.width, (float)simple_background.height};
+            player.update(objects, background_size, deltatime);
+            player2.update(objects,background_size, deltatime);
             follower.target_pos = Vector2Add(player.pos, {50, 50});
-            follower.update(objects, deltatime);
+            follower.update(objects,background_size, deltatime);
 
+            camera.size = {(float)GetScreenWidth(), (float)GetScreenHeight()};
             camera.pos = {player.pos.x - camera.size.x/2.f, player.pos.y - camera.size.y/2.f};
 
             // draw
@@ -108,15 +119,21 @@ int main(){
 
             // background
             ClearBackground(BACKGROUND_COLOR);
-            //DrawTexture(simple_background, 0, 0, WHITE);
             DrawTexture(simple_background, 0 - camera.pos.x, 0 - camera.pos.y, WHITE);
 
              // draw one of the backgrounds bounding boxes
-            //DrawRectangle(background_bounds_right.hitbox.value().x - camera.pos.x, background_bounds_right.hitbox.value().y - camera.pos.y, background_bounds_right.hitbox.value().width, background_bounds_right.hitbox.value().height, RED);
+             /*
+            DrawRectangle(background_bounds_right.hitbox.value().x - camera.pos.x, background_bounds_right.hitbox.value().y - camera.pos.y, background_bounds_right.hitbox.value().width, background_bounds_right.hitbox.value().height, RED);
+            DrawRectangle(background_bounds_top.hitbox.value().x - camera.pos.x, background_bounds_top.hitbox.value().y - camera.pos.y, background_bounds_top.hitbox.value().width, background_bounds_top.hitbox.value().height, RED);
+            DrawRectangle(background_bounds_left.hitbox.value().x - camera.pos.x, background_bounds_left.hitbox.value().y - camera.pos.y, background_bounds_left.hitbox.value().width, background_bounds_left.hitbox.value().height, RED);
+            DrawRectangle(background_bounds_bottom.hitbox.value().x - camera.pos.x, background_bounds_bottom.hitbox.value().y - camera.pos.y, background_bounds_bottom.hitbox.value().width, background_bounds_bottom.hitbox.value().height, RED);
+            */
+            //DrawRectangle(fence.hitbox.value().x - camera.pos.x, fence.hitbox.value().y - camera.pos.y, fence.hitbox.value().width, fence.hitbox.value().height, RED);
 
             for(const auto& object: render_objects){
                 object->render(Vector2Multiply({-1, -1}, camera.pos));
             }
+            //DrawRectangle(player.hitbox.value().x - camera.pos.x, player.hitbox.value().y - camera.pos.y, player.hitbox.value().width, player.hitbox.value().height, BLUE);
 
             DrawFPS(10, 10);
             EndDrawing();
