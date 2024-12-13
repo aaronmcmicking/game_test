@@ -1,6 +1,11 @@
 #pragma once
 
-class RenderObject{
+#include <raylib.h>
+#include "object.cpp"
+
+class RenderObject: public Object{
     public:
-        virtual void render() = 0;
+        RenderObject(Vector2 _pos, bool _solid = false, Rectangle _hitbox = {}): Object(_pos, _solid, _hitbox) {};
+
+        virtual void render(Vector2) = 0;
 };

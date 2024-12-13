@@ -4,6 +4,13 @@
 #include <raylib.h>
 #include <raymath.h>
 
+struct DirectionUDLR{
+    bool up;
+    bool down;
+    bool left;
+    bool right;
+};
+
 /*
  * a: start value
  * b: target value

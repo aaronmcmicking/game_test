@@ -13,9 +13,11 @@
 
 #include "texture_manager.cpp"
 #include "game_math.cpp"
+#include "static_object.cpp"
 #include "render_object.cpp"
 #include "player.cpp"
 #include "follower.cpp"
+#include "camera.cpp"
 
 double get_deltatime(){
     static std::chrono::high_resolution_clock::time_point previous_time = std::chrono::high_resolution_clock::now();
@@ -42,9 +44,12 @@ int main(){
 
     { // new context for when the window is open so that textures can be destroyed before closing the window
 
+        Image simple_background_img = LoadImage("backgrounds/basic_path.png");
+        Texture simple_background = LoadTextureFromImage(simple_background_img);
+        UnloadImage(simple_background_img);
 
         // object init
-        PlayerObject player = PlayerObject(Vector2{0,0}, Vector2{0,0}, .0005f, Vector2{100,100}, Vector2{350, 350});
+        PlayerObject player = PlayerObject(Vector2{50,50}, Vector2{0,0}, .0005f, Vector2{100,100}, Vector2{350, 350});
         player.set_key_binding(KEY_W, KEY_S, KEY_A, KEY_D);
         player.set_sprite("sprites/steve_face_100_100.png");
 
@@ -52,13 +57,38 @@ int main(){
         player2.set_key_binding(KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT);
         player2.set_sprite("sprites/steve_face_100_100.png");
 
-        Follower follower = Follower(.0003f, Vector2{100, 100}, Vector2{200, 200}, 1);
+        Follower follower = Follower(Vector2{50, 50}, .0003f, Vector2{100, 100}, Vector2{200, 200});
         follower.set_sprite("sprites/steve_face_100_100.png");
+
+        StaticObject background_bounds_top {Vector2{0, -100}, true, (Rectangle){0, -100, (float)simple_background.width, 100}};
+        StaticObject background_bounds_bottom {Vector2{0, (float)simple_background.height}, true, (Rectangle){0, (float)simple_background.height, (float)simple_background.width, 100}};
+        StaticObject background_bounds_left {Vector2{-100, 0}, true, (Rectangle){-100, 0, 100, (float)simple_background.height}};
+        StaticObject background_bounds_right {Vector2{(float)simple_background.width, 0}, true, (Rectangle){(float)simple_background.width, 0, 100, (float)simple_background.height}};
+
+        printf("backgrounds bounds have object IDs: top=%d, bottom=%d, left=%d, right=%d\n", background_bounds_top.id, background_bounds_bottom.id, background_bounds_left.id, background_bounds_right.id);
+
+        std::vector<Object*> objects {};
+        objects.push_back(&background_bounds_top);
+        objects.push_back(&background_bounds_bottom);
+        objects.push_back(&background_bounds_left);
+        objects.push_back(&background_bounds_right);
+
+        objects.push_back(&player);
+        objects.push_back(&player2);
+        objects.push_back(&follower);
 
         std::vector<RenderObject*> render_objects {};
         render_objects.push_back(&follower);
         render_objects.push_back(&player);
         render_objects.push_back(&player2);
+
+        /*
+        std::cout << "All object IDs in objects list are: ";
+        for(const auto& obj: objects){ std::cout << obj->id << ", "; }
+        std::cout << std::endl;
+        */
+
+        GameCamera camera = {{0, 0}, {(float)GetScreenWidth(), (float)GetScreenHeight()}};
 
         // deltatime init
         while(!WindowShouldClose()){
@@ -66,17 +96,26 @@ int main(){
             double deltatime = get_deltatime();
             //std::cout << deltatime << "ms" << std::endl;
 
-            player.update(deltatime);
-            player2.update(deltatime);
+            player.update(objects, {(float)simple_background.width, (float)simple_background.height}, deltatime);
+            player2.update(objects,{(float)simple_background.width, (float)simple_background.height}, deltatime);
             follower.target_pos = Vector2Add(player.pos, {50, 50});
-            follower.update(deltatime);
+            follower.update(objects, deltatime);
+
+            camera.pos = {player.pos.x - camera.size.x/2.f, player.pos.y - camera.size.y/2.f};
 
             // draw
             BeginDrawing();
+
+            // background
             ClearBackground(BACKGROUND_COLOR);
+            //DrawTexture(simple_background, 0, 0, WHITE);
+            DrawTexture(simple_background, 0 - camera.pos.x, 0 - camera.pos.y, WHITE);
+
+             // draw one of the backgrounds bounding boxes
+            //DrawRectangle(background_bounds_right.hitbox.value().x - camera.pos.x, background_bounds_right.hitbox.value().y - camera.pos.y, background_bounds_right.hitbox.value().width, background_bounds_right.hitbox.value().height, RED);
 
             for(const auto& object: render_objects){
-                object->render();
+                object->render(Vector2Multiply({-1, -1}, camera.pos));
             }
 
             DrawFPS(10, 10);
