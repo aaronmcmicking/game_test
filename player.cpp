@@ -44,7 +44,7 @@ class PlayerObject: public RenderObject{
             std::cout << "Loaded texture from '" << filename << "'" << std::endl;
         }
 
-        void update(std::vector<Object*> objects, Vector2 background_size, double deltatime){
+        void update(std::vector<Object*> objects, double deltatime){
             // check input
             respond_to_input(deltatime);
 

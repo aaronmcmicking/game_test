@@ -4,12 +4,18 @@
 #include <raylib.h>
 #include <iostream>
 #include <algorithm>
+#include <raymath.h>
 #include <utility>
 #include "game_math.cpp"
 #include "player.cpp"
 #include "render_object.cpp"
 
 //#include "texture_manager.cpp"
+
+typedef enum FOLLOWER_STATE{
+    IDLE = 1,
+    FOLLOWING,
+}FOLLOWER_STATE;
 
 class Follower: public RenderObject{
     public:
@@ -22,6 +28,8 @@ class Follower: public RenderObject{
             default_speed = _default_speed;
             max_speed = _default_speed;
             hitbox = Rectangle{.x = pos.x, .y = pos.y, .width = _size.x, .height = _size.y};
+
+            state = FOLLOWING;
         }
 
         void set_sprite(const char* filename){
@@ -30,8 +38,19 @@ class Follower: public RenderObject{
             std::cout << "(Follower " << id << ") Loaded texture from '" << filename << "'" << std::endl;
         }
 
-        void update(std::vector<Object*> objects, Vector2 background_size, double deltatime){
-            // check input
+        void update(std::vector<Object*> objects, double deltatime){
+            static Vector2 idle_pos = pos;
+            if(Vector2Distance(target_pos, pos) > 200){
+                state = FOLLOWING;
+            }else{
+                if(state == FOLLOWING){
+                    idle_pos = pos;
+                }
+                state = IDLE;
+                target_pos = idle_pos;
+            }
+            //std::cout << "follower (" << id << ") target_pos is (x,y) = (" << target_pos.x << ", " << target_pos.y << ")" << std::endl;
+
             update_velocity(deltatime);
 
             Vector2 future_pos = {
@@ -69,8 +88,6 @@ class Follower: public RenderObject{
         }
 
         void update_velocity(double deltatime){
-
-            //std::cout << "(follower " << id << ") target has pos (x, y) = (" << target->pos.x << ", " << target->pos.y << ")" << std::endl;
             bool above_target = (pos.y <= target_pos.y);
             bool left_of_target = (pos.x <= target_pos.x);
 
@@ -104,4 +121,6 @@ class Follower: public RenderObject{
         Vector2 target_pos;
 
         std::shared_ptr<Texture2D> sprite;
+
+        FOLLOWER_STATE state;
 };

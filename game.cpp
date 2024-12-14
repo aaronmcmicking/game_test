@@ -105,11 +105,10 @@ int main(){
                 continue;
             }
 
-            Vector2 background_size = {(float)simple_background.width, (float)simple_background.height};
-            player.update(objects, background_size, deltatime);
-            player2.update(objects,background_size, deltatime);
+            player.update(objects, deltatime);
+            player2.update(objects,deltatime);
             follower.target_pos = Vector2Add(player.pos, {50, 50});
-            follower.update(objects,background_size, deltatime);
+            follower.update(objects,deltatime);
 
             camera.size = {(float)GetScreenWidth(), (float)GetScreenHeight()};
             camera.pos = {player.pos.x - camera.size.x/2.f, player.pos.y - camera.size.y/2.f};
