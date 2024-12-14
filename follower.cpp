@@ -4,12 +4,18 @@
 #include <raylib.h>
 #include <iostream>
 #include <algorithm>
+#include <raymath.h>
 #include <utility>
 #include "game_math.cpp"
 #include "player.cpp"
 #include "render_object.cpp"
 
 //#include "texture_manager.cpp"
+
+typedef enum FOLLOWER_STATE{
+    IDLE = 1,
+    FOLLOWING,
+}FOLLOWER_STATE;
 
 class Follower: public RenderObject{
     public:
@@ -22,6 +28,8 @@ class Follower: public RenderObject{
             default_speed = _default_speed;
             max_speed = _default_speed;
             hitbox = Rectangle{.x = pos.x, .y = pos.y, .width = _size.x, .height = _size.y};
+
+            state = FOLLOWING;
         }
 
         void set_sprite(const char* filename){
@@ -30,9 +38,30 @@ class Follower: public RenderObject{
             std::cout << "(Follower " << id << ") Loaded texture from '" << filename << "'" << std::endl;
         }
 
-        void update(std::vector<Object*> objects, Vector2 background_size, double deltatime){
-            // check input
-            update_velocity(deltatime);
+        void update(std::vector<Object*> objects, double deltatime){
+            static Vector2 idle_pos = pos;
+            if(Vector2Distance(target_pos, pos) > 300){
+                state = FOLLOWING;
+            }else{
+                if(state == FOLLOWING){
+                    idle_pos = pos;
+                }
+                state = IDLE;
+                target_pos = idle_pos;
+            }
+            //std::cout << "follower (" << id << ") target_pos is (x,y) = (" << target_pos.x << ", " << target_pos.y << ")" << std::endl;
+
+            switch (state){
+                case IDLE:
+                    update_velocity(deltatime, {0, 0});
+                    break;
+                case FOLLOWING:
+                    update_velocity(deltatime, max_speed);
+                    break;
+                default:
+                    throw std::exception(); // unhandled state
+            }
+
 
             Vector2 future_pos = {
                 pos.x + (vel.x * (float)deltatime), 
@@ -68,26 +97,41 @@ class Follower: public RenderObject{
             //printf("player %d: speed = %g\n", id, sqrtf(vel.x*vel.x + vel.y*vel.y));
         }
 
-        void update_velocity(double deltatime){
-
-            //std::cout << "(follower " << id << ") target has pos (x, y) = (" << target->pos.x << ", " << target->pos.y << ")" << std::endl;
+        void update_velocity(double deltatime, Vector2 target_speed){
             bool above_target = (pos.y <= target_pos.y);
             bool left_of_target = (pos.x <= target_pos.x);
 
             auto lerp_velocity = [](float old_vel, bool lesser_than_target, float speed, float lerp_constant, double deltatime){
                 if(lesser_than_target){
-                    return lerp_dt_margin(old_vel, speed, deltatime, lerp_constant, 20.f);
+                    return lerp_dt_margin(old_vel, speed, deltatime, lerp_constant, 5.f);
                 }else if(!lesser_than_target){
-                    return lerp_dt_margin(old_vel, -speed, deltatime, lerp_constant, 20.f);
+                    return lerp_dt_margin(old_vel, -speed, deltatime, lerp_constant, 5.f);
                 }else{
                     throw std::exception();
                 }
             };
 
+            
+            float dist_to_target_x = std::abs(pos.x - target_pos.x);
+            float dist_to_target_y = std::abs(pos.y - target_pos.y);
+
+            float distance_margin = 5.f;
+            if(dist_to_target_x > distance_margin && dist_to_target_y > distance_margin){
+                target_speed = Vector2Multiply(target_speed, {1/1.414f, 1/1.414f});
+            }
+
             // left/right movement
-            vel.x = lerp_velocity(vel.x, left_of_target, max_speed.x, accel_lerp_constant, deltatime);
+            if(dist_to_target_x > distance_margin){
+                vel.x = lerp_velocity(vel.x, left_of_target, target_speed.x, accel_lerp_constant, deltatime);
+            }else{
+                vel.x = lerp_velocity(vel.x, left_of_target, 0, accel_lerp_constant, deltatime);
+            }
             // up/down movement
-            vel.y = lerp_velocity(vel.y, above_target, max_speed.y, accel_lerp_constant, deltatime);
+            if(dist_to_target_y > distance_margin){
+                vel.y = lerp_velocity(vel.y, above_target, target_speed.y, accel_lerp_constant, deltatime);
+            }else{
+                vel.y = lerp_velocity(vel.y, above_target, 0, accel_lerp_constant, deltatime);
+            }
         }
 
         void render(Vector2 pos_offset) override {
@@ -104,4 +148,6 @@ class Follower: public RenderObject{
         Vector2 target_pos;
 
         std::shared_ptr<Texture2D> sprite;
+
+        FOLLOWER_STATE state;
 };
