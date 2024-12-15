@@ -59,7 +59,7 @@ int main(){
         player2.set_key_binding(KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT);
         player2.set_sprite("sprites/steve_face_100_100.png");
 
-        Follower follower = Follower(Vector2{50, 50}, .0003f, Vector2{100, 100}, Vector2{200, 200});
+        Follower follower = Follower(Vector2{50, 50}, .0003f, Vector2{100, 100}, Vector2{300, 300});
         follower.set_sprite("sprites/steve_face_100_100.png");
 
         StaticObject background_bounds_top {Vector2{0, -100}, true, (Rectangle){0, -100, (float)simple_background.width, 100}};
@@ -101,13 +101,16 @@ int main(){
             double deltatime = get_deltatime();
             //std::cout << deltatime*1000.f << "ms" << std::endl; 
             if(deltatime > MAX_DELTATIME){
-                std::cout << "skipping frame with long deltatime (" << deltatime*1000.f << "ms)" << std::endl; 
-                continue;
+                //std::cout << "skipping frame with long deltatime (" << deltatime*1000.f << "ms)" << std::endl; 
+                //continue;
+                std::cout << "adjusting frame with long deltatime (" << deltatime*1000.f << "ms)" << std::endl; 
+                deltatime = MAX_DELTATIME;
             }
 
             player.update(objects, deltatime);
             player2.update(objects,deltatime);
-            follower.target_pos = Vector2Add(player.pos, {50, 50});
+            //follower.target_pos = Vector2Add(player.pos, {50, 50});
+            follower.target_pos = player.pos;
             follower.update(objects,deltatime);
 
             camera.size = {(float)GetScreenWidth(), (float)GetScreenHeight()};
