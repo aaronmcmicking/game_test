@@ -112,9 +112,9 @@ int main(){
             }
 
             player.update(objects, deltatime);
-            player2.update(objects,deltatime);
+            player2.update(objects, deltatime);
             follower.set_target_entity_pos(player.pos);
-            follower.update(objects,deltatime);
+            follower.update(objects, Vector2Length(player.vel) > 100.f, deltatime);
 
             camera.size = {(float)GetScreenWidth(), (float)GetScreenHeight()};
             camera.pos = {player.pos.x - camera.size.x/2.f, player.pos.y - camera.size.y/2.f};

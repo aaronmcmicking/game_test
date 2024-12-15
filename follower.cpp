@@ -15,7 +15,8 @@
 typedef enum FOLLOWER_STATE{
     IDLE = 1,
     FOLLOWING,
-    WANDERING,
+    WANDERING_MOVING,
+    WANDERING_WAITING,
 }FOLLOWER_STATE;
 
 class Follower: public RenderObject{
@@ -44,11 +45,11 @@ class Follower: public RenderObject{
         }
 
         void release(){
-            state = WANDERING;
+            state = WANDERING_WAITING;
             target_pos = Vector2Random(0, 4000);
         }
 
-        void update(std::vector<Object*> objects, double deltatime){
+        void update(std::vector<Object*> objects, bool target_moving, double deltatime){
             static Vector2 idle_pos = pos;
             /*
             if(Vector2Distance(target_pos, pos) > 300){
@@ -73,16 +74,24 @@ class Follower: public RenderObject{
                     }
                     break;
                 case FOLLOWING:
-                    if(dist_to_target <= 300){
+                    if((dist_to_target <= 150) || (dist_to_target <= 300 && !target_moving)){
                         state = IDLE;
                     }else{
                         update_velocity(deltatime, max_speed);  
                     }
                     break;
-                case WANDERING:
+                case WANDERING_WAITING:
+                    update_velocity(deltatime, {});
+                    if((GetRandomValue(0, 10000) / 10000.f) < .01){
+                        state = WANDERING_MOVING;
+                        target_pos = Vector2Random(0, 4000);
+                    }
+                    break;
+                case WANDERING_MOVING:
                     if(dist_to_target < 100){
                         //state = IDLE;
-                        target_pos = Vector2Random(0, 4000);
+                        //target_pos = Vector2Random(0, 4000);
+                        state = WANDERING_WAITING;
                     }else{
                         update_velocity(deltatime, max_speed);  
                     }
