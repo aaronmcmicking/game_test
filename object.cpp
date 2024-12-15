@@ -85,7 +85,7 @@ class Object{
         }
 
         Vector2 pos;
-        bool solid = false;
+        bool solid;
         std::optional<Rectangle> hitbox;
         int id;
 

@@ -12,6 +12,16 @@ struct DirectionUDLR{
     bool right;
 };
 
+Vector2 Vector2Random(int a, int b){
+    if(a > b){
+        float temp = b;
+        b = a;
+        a = temp;
+    }
+
+    return {(float)GetRandomValue(a, b), (float)GetRandomValue(a, b)};
+}
+
 /*
  * a: start value
  * b: target value
