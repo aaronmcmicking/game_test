@@ -15,6 +15,7 @@
 typedef enum FOLLOWER_STATE{
     IDLE = 1,
     FOLLOWING,
+    WANDERING,
 }FOLLOWER_STATE;
 
 class Follower: public RenderObject{
@@ -38,8 +39,18 @@ class Follower: public RenderObject{
             std::cout << "(Follower " << id << ") Loaded texture from '" << filename << "'" << std::endl;
         }
 
+        void recall(){
+            state = FOLLOWING;
+        }
+
+        void release(){
+            state = WANDERING;
+            target_pos = Vector2Random(0, 4000);
+        }
+
         void update(std::vector<Object*> objects, double deltatime){
             static Vector2 idle_pos = pos;
+            /*
             if(Vector2Distance(target_pos, pos) > 300){
                 state = FOLLOWING;
             }else{
@@ -49,14 +60,32 @@ class Follower: public RenderObject{
                 state = IDLE;
                 target_pos = idle_pos;
             }
+            */
             //std::cout << "follower (" << id << ") target_pos is (x,y) = (" << target_pos.x << ", " << target_pos.y << ")" << std::endl;
 
+            float dist_to_target = Vector2Distance(pos, target_pos);
             switch (state){
                 case IDLE:
-                    update_velocity(deltatime, {0, 0});
+                    if(dist_to_target > 300){
+                        state = FOLLOWING;
+                    }else{
+                        update_velocity(deltatime, {0, 0});
+                    }
                     break;
                 case FOLLOWING:
-                    update_velocity(deltatime, max_speed);
+                    if(dist_to_target <= 300){
+                        state = IDLE;
+                    }else{
+                        update_velocity(deltatime, max_speed);  
+                    }
+                    break;
+                case WANDERING:
+                    if(dist_to_target < 100){
+                        //state = IDLE;
+                        target_pos = Vector2Random(0, 4000);
+                    }else{
+                        update_velocity(deltatime, max_speed);  
+                    }
                     break;
                 default:
                     throw std::exception(); // unhandled state
@@ -134,6 +163,12 @@ class Follower: public RenderObject{
             }
         }
 
+        void set_target_entity_pos(Vector2 _pos){
+            if(state == FOLLOWING || state == IDLE){
+                target_pos = _pos;
+            }
+        }
+
         void render(Vector2 pos_offset) override {
             DrawTexture(*sprite, pos.x + pos_offset.x, pos.y + pos_offset.y, WHITE);
         };
@@ -144,10 +179,11 @@ class Follower: public RenderObject{
         Vector2 default_speed;
         Vector2 max_speed; // may change when moving diagonally, etc
 
-        int id;
-        Vector2 target_pos;
 
         std::shared_ptr<Texture2D> sprite;
 
         FOLLOWER_STATE state;
+
+    private:
+        Vector2 target_pos;
 };

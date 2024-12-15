@@ -87,11 +87,9 @@ int main(){
         render_objects.push_back(&player);
         render_objects.push_back(&player2);
 
-        /*
         std::cout << "All object IDs in objects list are: ";
         for(const auto& obj: objects){ std::cout << obj->id << ", "; }
         std::cout << std::endl;
-        */
 
         GameCamera camera = {{0, 0}, {(float)GetScreenWidth(), (float)GetScreenHeight()}};
 
@@ -107,10 +105,15 @@ int main(){
                 deltatime = MAX_DELTATIME;
             }
 
+            if(IsKeyDown(KEY_R)){
+                follower.recall();
+            }else if(IsKeyDown(KEY_T)){
+                follower.release();
+            }
+
             player.update(objects, deltatime);
             player2.update(objects,deltatime);
-            //follower.target_pos = Vector2Add(player.pos, {50, 50});
-            follower.target_pos = player.pos;
+            follower.set_target_entity_pos(player.pos);
             follower.update(objects,deltatime);
 
             camera.size = {(float)GetScreenWidth(), (float)GetScreenHeight()};
