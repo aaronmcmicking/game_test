@@ -19,9 +19,11 @@ typedef enum FOLLOWER_STATE{
     WANDERING_WAITING,
 }FOLLOWER_STATE;
 
-class Follower: public RenderObject{
+//class Follower: public RenderObject{
+class Follower: public Object{
     public:
-        Follower(Vector2 _pos, float _accel_lerp_constant, Vector2 _size, Vector2 _default_speed, Vector2 _target_pos = {500, 500}): RenderObject(_pos, false, Rectangle{}), sprite {nullptr} {
+        //Follower(Vector2 _pos, float _accel_lerp_constant, Vector2 _size, Vector2 _default_speed, Vector2 _target_pos = {500, 500}): RenderObject(_pos, false, Rectangle{}), sprite {nullptr} {
+        Follower(Vector2 _pos, float _accel_lerp_constant, Vector2 _size, Vector2 _default_speed, Vector2 _target_pos = {500, 500}): Object(_pos, true, false, Rectangle{}), sprite {nullptr} {
             target_pos = _target_pos;
             pos = _pos;
             vel = {0, 0};
@@ -178,7 +180,7 @@ class Follower: public RenderObject{
             }
         }
 
-        void render(Vector2 pos_offset) override {
+        virtual void render(Vector2 pos_offset) override {
             DrawTexture(*sprite, pos.x + pos_offset.x, pos.y + pos_offset.y, WHITE);
         };
 

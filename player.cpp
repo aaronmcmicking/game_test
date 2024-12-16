@@ -12,9 +12,11 @@
 
 #include "render_object.cpp"
 
-class PlayerObject: public RenderObject{
+//class PlayerObject: public RenderObject{
+class PlayerObject: public Object{
     public:
-        PlayerObject(Vector2 _pos, Vector2 _vel, float _accel_lerp_constant, Vector2 _size, Vector2 _default_speed): RenderObject(_pos, false, Rectangle{}), sprite {nullptr} {
+        //PlayerObject(Vector2 _pos, Vector2 _vel, float _accel_lerp_constant, Vector2 _size, Vector2 _default_speed): RenderObject(_pos, false, Rectangle{}), sprite {nullptr} {
+        PlayerObject(Vector2 _pos, Vector2 _vel, float _accel_lerp_constant, Vector2 _size, Vector2 _default_speed): Object(_pos, true, false, Rectangle{}), sprite {nullptr} {
             pos = _pos;
             vel = _vel;
             accel_lerp_constant = _accel_lerp_constant;
@@ -115,7 +117,7 @@ class PlayerObject: public RenderObject{
             //if(id==0) std::cout << "player (" << id << ") vel(x, y) = (" << vel.x << ", " << vel.y << ")" << std::endl;
         }
 
-        void render(Vector2 pos_offset) override {
+        virtual void render(Vector2 pos_offset) override {
             DrawTexture(*sprite, pos.x + pos_offset.x, pos.y + pos_offset.y, WHITE);
         }
 

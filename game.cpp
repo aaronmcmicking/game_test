@@ -62,14 +62,12 @@ int main(){
         Follower follower = Follower(Vector2{50, 50}, .0003f, Vector2{100, 100}, Vector2{300, 300});
         follower.set_sprite("sprites/steve_face_100_100.png");
 
-        StaticObject background_bounds_top {Vector2{0, -100}, true, (Rectangle){0, -100, (float)simple_background.width, 100}};
-        StaticObject background_bounds_bottom {Vector2{0, (float)simple_background.height}, true, (Rectangle){0, (float)simple_background.height, (float)simple_background.width, 100}};
-        StaticObject background_bounds_left {Vector2{-100, 0}, true, (Rectangle){-100, 0, 100, (float)simple_background.height}};
-        StaticObject background_bounds_right {Vector2{(float)simple_background.width, 0}, true, (Rectangle){(float)simple_background.width, 0, 100, (float)simple_background.height}};
+        StaticObject background_bounds_top {Vector2{0, -100}, false, true, (Rectangle){0, -100, (float)simple_background.width, 100}};
+        StaticObject background_bounds_bottom {Vector2{0, (float)simple_background.height}, false, true, (Rectangle){0, (float)simple_background.height, (float)simple_background.width, 100}};
+        StaticObject background_bounds_left {Vector2{-100, 0}, false, true, (Rectangle){-100, 0, 100, (float)simple_background.height}};
+        StaticObject background_bounds_right {Vector2{(float)simple_background.width, 0}, false, true, (Rectangle){(float)simple_background.width, 0, 100, (float)simple_background.height}};
 
-        StaticObject fence {Vector2{0,1300}, true, Rectangle{0, 1300, 2657, 200}};
-
-        printf("backgrounds bounds have object IDs: top=%d, bottom=%d, left=%d, right=%d\n", background_bounds_top.id, background_bounds_bottom.id, background_bounds_left.id, background_bounds_right.id);
+        StaticObject fence {Vector2{0,1300}, false, true, Rectangle{0, 1300, 2657, 200}};
 
         std::vector<Object*> objects {};
         objects.push_back(&fence);
@@ -82,14 +80,11 @@ int main(){
         objects.push_back(&player2);
         objects.push_back(&follower);
 
-        std::vector<RenderObject*> render_objects {};
-        render_objects.push_back(&follower);
-        render_objects.push_back(&player);
-        render_objects.push_back(&player2);
-
+        /*
         std::cout << "All object IDs in objects list are: ";
         for(const auto& obj: objects){ std::cout << obj->id << ", "; }
         std::cout << std::endl;
+        */
 
         GameCamera camera = {{0, 0}, {(float)GetScreenWidth(), (float)GetScreenHeight()}};
 
@@ -116,8 +111,10 @@ int main(){
             follower.set_target_entity_pos(player.pos);
             follower.update(objects, Vector2Length(player.vel) > 100.f, deltatime);
 
-            camera.size = {(float)GetScreenWidth(), (float)GetScreenHeight()};
-            camera.pos = {player.pos.x - camera.size.x/2.f, player.pos.y - camera.size.y/2.f};
+            if(IsWindowResized()){
+                camera.size = {(float)GetScreenWidth(), (float)GetScreenHeight()};
+            }
+            camera.pos = {(player.pos.x + (player.size.x)/2.f) - camera.size.x/2.f, (player.pos.y + (player.size.y)/2.f) - camera.size.y/2.f};
 
             // draw
             BeginDrawing();
@@ -135,8 +132,10 @@ int main(){
             */
             //DrawRectangle(fence.hitbox.value().x - camera.pos.x, fence.hitbox.value().y - camera.pos.y, fence.hitbox.value().width, fence.hitbox.value().height, RED);
 
-            for(const auto& object: render_objects){
-                object->render(Vector2Multiply({-1, -1}, camera.pos));
+            for(const auto& object: objects){
+                if(object->renderable){
+                    object->render(Vector2Multiply({-1, -1}, camera.pos));
+                }
             }
             //DrawRectangle(player.hitbox.value().x - camera.pos.x, player.hitbox.value().y - camera.pos.y, player.hitbox.value().width, player.hitbox.value().height, BLUE);
 

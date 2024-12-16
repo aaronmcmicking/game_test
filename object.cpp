@@ -9,8 +9,9 @@
 
 class Object{
     public:
-        Object(Vector2 _pos, bool _solid = false, Rectangle _hitbox = {}){
+        Object(Vector2 _pos, bool _renderable, bool _solid = false, Rectangle _hitbox = {}){
             pos = _pos;
+            renderable = _renderable;
             solid = _solid;
 
             if(!_solid || (_hitbox.width == 0 && _hitbox.height == 0)){
@@ -83,6 +84,9 @@ class Object{
 
             return collisions;
         }
+
+        virtual void render(Vector2 pos_offset){};
+        bool renderable;
 
         Vector2 pos;
         bool solid;
