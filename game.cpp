@@ -11,7 +11,6 @@
 
 #include "print_rl_colour.cpp"
 
-#include "texture_manager.cpp"
 #include "game_math.cpp"
 #include "static_object.cpp"
 #include "render_object.cpp"
@@ -30,6 +29,30 @@ double get_deltatime(){
     return deltatime;
 }
 
+std::vector<Object*> load_world(Texture* bg){
+        std::vector<Object*> objects {};
+
+        Image simple_background_img = LoadImage("backgrounds/basic_path.png");
+        Texture simple_background = LoadTextureFromImage(simple_background_img);
+        UnloadImage(simple_background_img);
+
+        StaticObject* background_bounds_top = new StaticObject({Vector2{0, -100}, false, true, (Rectangle){0, -100, (float)simple_background.width, 100}});
+        StaticObject* background_bounds_bottom = new StaticObject({Vector2{0, (float)simple_background.height}, false, true, (Rectangle){0, (float)simple_background.height, (float)simple_background.width, 100}});
+        StaticObject* background_bounds_left = new StaticObject({Vector2{-100, 0}, false, true, (Rectangle){-100, 0, 100, (float)simple_background.height}});
+        StaticObject* background_bounds_right = new StaticObject({Vector2{(float)simple_background.width, 0}, false, true, (Rectangle){(float)simple_background.width, 0, 100, (float)simple_background.height}});
+        StaticObject* fence = new StaticObject({Vector2{0,1300}, false, true, Rectangle{0, 1300, 2657, 200}});
+
+        objects.push_back(background_bounds_top);
+        objects.push_back(background_bounds_bottom);
+        objects.push_back(background_bounds_left);
+        objects.push_back(background_bounds_right);
+        objects.push_back(fence);
+
+        *bg = simple_background;
+
+        return objects;
+}
+
 int main(){
     const int DEFAULT_WINDOW_WIDTH = 1000;
     const int DEFAULT_WINDOW_HEIGHT = 1000;
@@ -46,11 +69,11 @@ int main(){
 
     { // new context for when the window is open so that textures can be destroyed before closing the window
 
-        Image simple_background_img = LoadImage("backgrounds/basic_path.png");
-        Texture simple_background = LoadTextureFromImage(simple_background_img);
-        UnloadImage(simple_background_img);
-
         // object init
+        std::vector<Object*> objects {};
+        Texture simple_background {};
+        objects = load_world(&simple_background);
+
         PlayerObject player = PlayerObject(Vector2{250, 250}, Vector2{0,0}, .0005f, Vector2{100,100}, Vector2{350, 350});
         player.set_key_binding(KEY_W, KEY_S, KEY_A, KEY_D);
         player.set_sprite("sprites/steve_face_100_100.png");
@@ -61,20 +84,6 @@ int main(){
 
         Follower follower = Follower(Vector2{50, 50}, .0003f, Vector2{100, 100}, Vector2{300, 300});
         follower.set_sprite("sprites/steve_face_100_100.png");
-
-        StaticObject background_bounds_top {Vector2{0, -100}, false, true, (Rectangle){0, -100, (float)simple_background.width, 100}};
-        StaticObject background_bounds_bottom {Vector2{0, (float)simple_background.height}, false, true, (Rectangle){0, (float)simple_background.height, (float)simple_background.width, 100}};
-        StaticObject background_bounds_left {Vector2{-100, 0}, false, true, (Rectangle){-100, 0, 100, (float)simple_background.height}};
-        StaticObject background_bounds_right {Vector2{(float)simple_background.width, 0}, false, true, (Rectangle){(float)simple_background.width, 0, 100, (float)simple_background.height}};
-
-        StaticObject fence {Vector2{0,1300}, false, true, Rectangle{0, 1300, 2657, 200}};
-
-        std::vector<Object*> objects {};
-        objects.push_back(&fence);
-        objects.push_back(&background_bounds_top);
-        objects.push_back(&background_bounds_bottom);
-        objects.push_back(&background_bounds_left);
-        objects.push_back(&background_bounds_right);
 
         objects.push_back(&player);
         objects.push_back(&player2);
@@ -145,7 +154,6 @@ int main(){
 
     } // close context for when window is open (destroys textures before CloseWindow called)
 
-    //texture_manager.unload();
     CloseWindow();
 
 
