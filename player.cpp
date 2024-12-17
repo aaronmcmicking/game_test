@@ -15,7 +15,6 @@
 //class PlayerObject: public RenderObject{
 class PlayerObject: public Object{
     public:
-        //PlayerObject(Vector2 _pos, Vector2 _vel, float _accel_lerp_constant, Vector2 _size, Vector2 _default_speed): RenderObject(_pos, false, Rectangle{}), sprite {nullptr} {
         PlayerObject(Vector2 _pos, Vector2 _vel, float _accel_lerp_constant, Vector2 _size, Vector2 _default_speed): Object(_pos, true, false, Rectangle{}), sprite {nullptr} {
             pos = _pos;
             vel = _vel;
@@ -46,7 +45,8 @@ class PlayerObject: public Object{
             std::cout << "Loaded texture from '" << filename << "'" << std::endl;
         }
 
-        void update(std::vector<Object*> objects, double deltatime){
+        //void update(std::vector<Object*> objects, double deltatime){
+        void update(std::vector<std::shared_ptr<Object>> objects, double deltatime){
             // check input
             respond_to_input(deltatime);
 

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <exception>
+#include <memory>
 #include <raylib.h>
 #include <iostream>
 #include <algorithm>
@@ -51,8 +52,9 @@ class Follower: public Object{
             target_pos = Vector2Random(0, 4000);
         }
 
-        void update(std::vector<Object*> objects, bool target_moving, double deltatime){
-            static Vector2 idle_pos = pos;
+        //void update(std::vector<Object*> objects, bool target_moving, double deltatime){
+        void update(std::vector<std::shared_ptr<Object>> objects, bool target_moving, double deltatime){
+            //static Vector2 idle_pos = pos;
             /*
             if(Vector2Distance(target_pos, pos) > 300){
                 state = FOLLOWING;

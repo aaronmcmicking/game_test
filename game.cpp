@@ -5,9 +5,11 @@
 #include <algorithm>
 #include <chrono>
 
+#include <memory>
 #include <raylib.h>
 #include <rlgl.h>
 #include <raymath.h>
+#include <stdexcept>
 
 #include "print_rl_colour.cpp"
 
@@ -29,28 +31,43 @@ double get_deltatime(){
     return deltatime;
 }
 
-std::vector<Object*> load_world(Texture* bg){
-        std::vector<Object*> objects {};
+std::vector<std::shared_ptr<Object>> load_world(Texture* bg){
+        std::vector<std::shared_ptr<Object>> objects {};
 
         Image simple_background_img = LoadImage("backgrounds/basic_path.png");
         Texture simple_background = LoadTextureFromImage(simple_background_img);
         UnloadImage(simple_background_img);
 
-        StaticObject* background_bounds_top = new StaticObject({Vector2{0, -100}, false, true, (Rectangle){0, -100, (float)simple_background.width, 100}});
-        StaticObject* background_bounds_bottom = new StaticObject({Vector2{0, (float)simple_background.height}, false, true, (Rectangle){0, (float)simple_background.height, (float)simple_background.width, 100}});
-        StaticObject* background_bounds_left = new StaticObject({Vector2{-100, 0}, false, true, (Rectangle){-100, 0, 100, (float)simple_background.height}});
-        StaticObject* background_bounds_right = new StaticObject({Vector2{(float)simple_background.width, 0}, false, true, (Rectangle){(float)simple_background.width, 0, 100, (float)simple_background.height}});
-        StaticObject* fence = new StaticObject({Vector2{0,1300}, false, true, Rectangle{0, 1300, 2657, 200}});
+        StaticObject background_bounds_top = StaticObject({Vector2{0, -100}, false, true, (Rectangle){0, -100, (float)simple_background.width, 100}});
+        StaticObject background_bounds_bottom = StaticObject({Vector2{0, (float)simple_background.height}, false, true, (Rectangle){0, (float)simple_background.height, (float)simple_background.width, 100}});
+        StaticObject background_bounds_left = StaticObject({Vector2{-100, 0}, false, true, (Rectangle){-100, 0, 100, (float)simple_background.height}});
+        StaticObject background_bounds_right = StaticObject({Vector2{(float)simple_background.width, 0}, false, true, (Rectangle){(float)simple_background.width, 0, 100, (float)simple_background.height}});
+        StaticObject fence = StaticObject({Vector2{0,1300}, false, true, Rectangle{0, 1300, 2657, 200}});
 
-        objects.push_back(background_bounds_top);
-        objects.push_back(background_bounds_bottom);
-        objects.push_back(background_bounds_left);
-        objects.push_back(background_bounds_right);
-        objects.push_back(fence);
+        objects.push_back(std::make_shared<StaticObject>(background_bounds_top));
+        objects.push_back(std::make_shared<StaticObject>(background_bounds_bottom));
+        objects.push_back(std::make_shared<StaticObject>(background_bounds_left));
+        objects.push_back(std::make_shared<StaticObject>(background_bounds_right));
+        objects.push_back(std::make_shared<StaticObject>(fence));
 
         *bg = simple_background;
 
         return objects;
+}
+
+template <typename T>
+T& get_object_by_id(std::vector<std::shared_ptr<Object>>& objects, int target_id) {
+    for (auto& obj: objects) {
+        if (obj->id == target_id) {
+            // attempt to dynamic_cast to the desired subclass (T)
+            if (auto* derived = dynamic_cast<T*>(obj.get())) {
+                return *derived;  // return a reference to the derived type
+            } else {
+                throw std::runtime_error("Object with the given ID is not of the requested type");
+            }
+        }
+    }
+    throw std::runtime_error("Object with the given ID not found");
 }
 
 int main(){
@@ -70,25 +87,32 @@ int main(){
     { // new context for when the window is open so that textures can be destroyed before closing the window
 
         // object init
-        std::vector<Object*> objects {};
+        std::vector<std::shared_ptr<Object>> objects {};
         Texture simple_background {};
         objects = load_world(&simple_background);
 
-        PlayerObject player = PlayerObject(Vector2{250, 250}, Vector2{0,0}, .0005f, Vector2{100,100}, Vector2{350, 350});
-        player.set_key_binding(KEY_W, KEY_S, KEY_A, KEY_D);
-        player.set_sprite("sprites/steve_face_100_100.png");
+        PlayerObject _player = PlayerObject(Vector2{250, 250}, Vector2{0,0}, .0005f, Vector2{100,100}, Vector2{350, 350});
+        int player_id = _player.id;
+        _player.set_key_binding(KEY_W, KEY_S, KEY_A, KEY_D);
+        _player.set_sprite("sprites/steve_face_100_100.png");
 
-        PlayerObject player2 = PlayerObject(Vector2{500,500}, Vector2{0,0}, .0005f, Vector2{80, 80}, Vector2{350, 350});
-        player2.set_key_binding(KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT);
-        player2.set_sprite("sprites/steve_face_100_100.png");
+        PlayerObject _player2 = PlayerObject(Vector2{500,500}, Vector2{0,0}, .0005f, Vector2{80, 80}, Vector2{350, 350});
+        int player2_id = _player2.id;
+        _player2.set_key_binding(KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT);
+        _player2.set_sprite("sprites/steve_face_100_100.png");
 
-        Follower follower = Follower(Vector2{50, 50}, .0003f, Vector2{100, 100}, Vector2{300, 300});
-        follower.set_sprite("sprites/steve_face_100_100.png");
+        Follower _follower = Follower(Vector2{50, 50}, .0003f, Vector2{100, 100}, Vector2{300, 300});
+        int follower_id = _follower.id;
+        _follower.set_sprite("sprites/steve_face_100_100.png");
 
-        objects.push_back(&player);
-        objects.push_back(&player2);
-        objects.push_back(&follower);
+        objects.push_back(std::make_shared<PlayerObject>(_player));
+        objects.push_back(std::make_shared<PlayerObject>(_player2));
+        objects.push_back(std::make_shared<Follower>(_follower));
 
+        PlayerObject& player = get_object_by_id<PlayerObject>(objects, player_id);
+        PlayerObject& player2 = get_object_by_id<PlayerObject>(objects, player2_id);
+        Follower& follower = get_object_by_id<Follower>(objects, follower_id);
+    
         /*
         std::cout << "All object IDs in objects list are: ";
         for(const auto& obj: objects){ std::cout << obj->id << ", "; }

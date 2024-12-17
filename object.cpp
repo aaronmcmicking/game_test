@@ -3,12 +3,15 @@
 #include <iostream>
 #include <optional>
 #include <raylib.h>
+#include <memory>
 #include <array>
 #include <vector>
 #include "game_math.cpp"
 
 class Object{
     public:
+        Object(){ }
+    
         Object(Vector2 _pos, bool _renderable, bool _solid = false, Rectangle _hitbox = {}){
             pos = _pos;
             renderable = _renderable;
@@ -23,7 +26,8 @@ class Object{
             id = id_counter++;
         }
 
-        DirectionUDLR check_collision_solids(std::vector<Object*> objects, Vector2 future_pos){
+        //DirectionUDLR check_collision_solids(std::vector<Object*> objects, Vector2 future_pos){
+        DirectionUDLR check_collision_solids(std::vector<std::shared_ptr<Object>> objects, Vector2 future_pos){
             //if(!solid){ return {false, false, false, false}; }
             if(!hitbox.has_value()){ return {false, false, false, false}; }
 
