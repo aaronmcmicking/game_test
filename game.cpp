@@ -94,16 +94,16 @@ int main(){
         PlayerObject _player = PlayerObject(Vector2{250, 250}, Vector2{0,0}, .0005f, Vector2{100,100}, Vector2{350, 350});
         int player_id = _player.id;
         _player.set_key_binding(KEY_W, KEY_S, KEY_A, KEY_D);
-        _player.set_sprite("sprites/steve_face_100_100.png");
+        _player.set_sprite("sprites/sprite_100x100.png");
 
         PlayerObject _player2 = PlayerObject(Vector2{500,500}, Vector2{0,0}, .0005f, Vector2{80, 80}, Vector2{350, 350});
         int player2_id = _player2.id;
         _player2.set_key_binding(KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT);
-        _player2.set_sprite("sprites/steve_face_100_100.png");
+        _player2.set_sprite("sprites/sprite_100x100.png");
 
         Follower _follower = Follower(Vector2{50, 50}, .0003f, Vector2{100, 100}, Vector2{300, 300});
         int follower_id = _follower.id;
-        _follower.set_sprite("sprites/steve_face_100_100.png");
+        _follower.set_sprite("sprites/sprite_100x100.png");
 
         objects.push_back(std::make_shared<PlayerObject>(_player));
         objects.push_back(std::make_shared<PlayerObject>(_player2));

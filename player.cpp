@@ -15,7 +15,7 @@
 //class PlayerObject: public RenderObject{
 class PlayerObject: public Object{
     public:
-        PlayerObject(Vector2 _pos, Vector2 _vel, float _accel_lerp_constant, Vector2 _size, Vector2 _default_speed): Object(_pos, true, false, Rectangle{}), sprite {nullptr} {
+        PlayerObject(Vector2 _pos, Vector2 _vel, float _accel_lerp_constant, Vector2 _size, Vector2 _default_speed): Object(_pos, true, true, Rectangle{}), sprite {nullptr} {
             pos = _pos;
             vel = _vel;
             accel_lerp_constant = _accel_lerp_constant;
